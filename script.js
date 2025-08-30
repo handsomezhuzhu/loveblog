@@ -1,6 +1,18 @@
 // 恋爱开始日期：2022年1月1日
 const startDate = new Date('2022-01-01T00:00:00');
 
+// 情侣信息
+const coupleInfo = {
+    male: {
+        nickname: '大河马',
+        birthday: { month: 7, day: 16 } // 7月16日
+    },
+    female: {
+        nickname: '小水牛',
+        birthday: { month: 8, day: 5 } // 8月5日
+    }
+};
+
 // 里程碑数据
 const milestones = [
     { days: 100, label: '百日纪念', icon: '🎉' },
@@ -12,6 +24,42 @@ const milestones = [
     { days: 1500, label: '1500天', icon: '🎊' },
     { days: 1825, label: '五周年', icon: '💍' }
 ];
+
+// 计算下一个特殊日期的倒计时
+function calculateNextDate(month, day, label) {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    let nextDate = new Date(currentYear, month - 1, day);
+    
+    // 如果今年的日期已经过了，计算明年的
+    if (nextDate < now) {
+        nextDate = new Date(currentYear + 1, month - 1, day);
+    }
+    
+    const timeDiff = nextDate - now;
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    
+    return { days, date: nextDate, label };
+}
+
+// 计算七夕节（农历七月初七，大约公历8月中旬）
+function calculateQixi() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    
+    // 2025年七夕是8月10日，每年大约在8月10-20日之间
+    // 这里使用近似计算，实际应用中可以使用农历转换库
+    let qixiDate = new Date(currentYear, 7, 10); // 8月10日作为近似
+    
+    if (qixiDate < now) {
+        qixiDate = new Date(currentYear + 1, 7, 10);
+    }
+    
+    const timeDiff = qixiDate - now;
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    
+    return { days, date: qixiDate, label: '七夕节' };
+}
 
 // 更新计数器
 function updateCounter() {
@@ -29,6 +77,38 @@ function updateCounter() {
     updateElementWithAnimation('hours', hours);
     updateElementWithAnimation('minutes', minutes);
     updateElementWithAnimation('seconds', seconds);
+    
+    // 更新倒计时
+    updateCountdowns();
+}
+
+// 更新各种倒计时
+function updateCountdowns() {
+    const qixi = calculateQixi();
+    const valentine = calculateNextDate(2, 14, '情人节');
+    const maleBirthday = calculateNextDate(coupleInfo.male.birthday.month, coupleInfo.male.birthday.day, `${coupleInfo.male.nickname}生日`);
+    const femaleBirthday = calculateNextDate(coupleInfo.female.birthday.month, coupleInfo.female.birthday.day, `${coupleInfo.female.nickname}生日`);
+    
+    // 更新倒计时显示
+    updateCountdownElement('qixi-countdown', qixi);
+    updateCountdownElement('valentine-countdown', valentine);
+    updateCountdownElement('male-birthday-countdown', maleBirthday);
+    updateCountdownElement('female-birthday-countdown', femaleBirthday);
+}
+
+// 更新倒计时元素
+function updateCountdownElement(elementId, countdownData) {
+    const daysElement = document.getElementById(elementId + '-days');
+    if (daysElement) {
+        if (daysElement.textContent !== countdownData.days.toString()) {
+            daysElement.style.transform = 'scale(1.1)';
+            daysElement.textContent = countdownData.days;
+            
+            setTimeout(() => {
+                daysElement.style.transform = 'scale(1)';
+            }, 200);
+        }
+    }
 }
 
 // 带动画的元素更新
