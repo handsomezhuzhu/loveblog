@@ -66,20 +66,29 @@ function updateCounter() {
     const now = new Date();
     const timeDiff = now - startDate;
     
-    // 计算天数、小时、分钟、秒
+    // 计算天数、小时、分钟、秒（包含毫秒）
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+    const totalSeconds = (timeDiff % (1000 * 60)) / 1000;
+    const seconds = totalSeconds.toFixed(3); // 保留3位小数显示毫秒
     
-    // 更新DOM元素
-    updateElementWithAnimation('days', days);
-    updateElementWithAnimation('hours', hours);
-    updateElementWithAnimation('minutes', minutes);
-    updateElementWithAnimation('seconds', seconds);
-    
-    // 更新倒计时
-    updateCountdowns();
+    // 直接更新DOM元素，不使用动画
+    updateElementSmoothly('days', days.toLocaleString());
+    updateElementSmoothly('hours', hours.toString().padStart(2, '0'));
+    updateElementSmoothly('minutes', minutes.toString().padStart(2, '0'));
+    updateElementSmoothly('seconds', seconds.padStart(6, '0')); // 确保格式为00.000
+}
+
+// 更新倒计时（降低频率）
+let countdownUpdateCounter = 0;
+function updateCountdownsIfNeeded() {
+    // 每2秒更新一次倒计时（40次updateCounter调用）
+    countdownUpdateCounter++;
+    if (countdownUpdateCounter >= 40) {
+        updateCountdowns();
+        countdownUpdateCounter = 0;
+    }
 }
 
 // 更新各种倒计时
@@ -96,22 +105,23 @@ function updateCountdowns() {
     updateCountdownElement('female-birthday-countdown', femaleBirthday);
 }
 
-// 更新倒计时元素
+// 更新倒计时元素（无动画，平滑更新）
 function updateCountdownElement(elementId, countdownData) {
     const daysElement = document.getElementById(elementId + '-days');
     if (daysElement) {
-        if (daysElement.textContent !== countdownData.days.toString()) {
-            daysElement.style.transform = 'scale(1.1)';
-            daysElement.textContent = countdownData.days;
-            
-            setTimeout(() => {
-                daysElement.style.transform = 'scale(1)';
-            }, 200);
-        }
+        daysElement.textContent = countdownData.days;
     }
 }
 
-// 带动画的元素更新
+// 平滑更新元素（无动画）
+function updateElementSmoothly(elementId, newValue) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = newValue;
+    }
+}
+
+// 带动画的元素更新（仅用于特殊场合）
 function updateElementWithAnimation(elementId, newValue) {
     const element = document.getElementById(elementId);
     if (element && element.textContent !== newValue.toString()) {
@@ -390,8 +400,14 @@ function init() {
     // 添加键盘快捷键
     addKeyboardShortcuts();
     
-    // 每秒更新一次
-    setInterval(updateCounter, 1000);
+    // 每50毫秒更新一次，让毫秒变化更流畅
+    setInterval(() => {
+        updateCounter();
+        updateCountdownsIfNeeded();
+    }, 50);
+    
+    // 初始化时立即更新一次倒计时
+    updateCountdowns();
 }
 
 // 页面加载完成后初始化
